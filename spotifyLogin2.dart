@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
-
-import '../101/color_learn.dart';
+import 'package:spotify_clone/model/user_request.dart';
+import 'package:spotify_clone/service/firebase_service.dart';
+import '../const/ProjectColor.dart';
+import '../const/ProjectKeys.dart';
+import '../const/ImageItems.dart';
+import '../const/ProjectStyle.dart';
+import '../const/pad.dart';
+import '../model/user_auth_error.dart';
+import 'Container2.dart';
 
 class Spotify extends StatefulWidget {
   const Spotify({Key? key}) : super(key: key);
@@ -10,10 +17,15 @@ class Spotify extends StatefulWidget {
 }
 
 class _SpotifyState extends State<Spotify> {
+  GlobalKey<ScaffoldState> scaffold = GlobalKey();
   bool checkboxValue = false;
 
   @override
   Widget build(BuildContext context) {
+    String? username;
+    String? password;
+    FirebaseService servis = FirebaseService();
+
     return DefaultTabController(
       //length: 2,
       length: _MyTabSpotifyViews.values.length,
@@ -30,14 +42,40 @@ class _SpotifyState extends State<Spotify> {
                       padding: ProjectPadding.pageEmail,
                       child: Container(
                         decoration: _BoxEmailPassw(),
-                        child: _emailTextField(),
+                        child: TextField(
+                          keyboardType: TextInputType.emailAddress,
+                          autofocus: true,
+                          autofillHints: const [AutofillHints.email],
+                          textInputAction: TextInputAction.next,
+                          decoration: _InputDecoration().emailInput,
+                          onChanged: (val) {
+                            setState(() {
+                              username = val;
+                            });
+                          },
+                        ),
+                        //_emailTextField(),
                       ),
                     ),
                     Container(
                       //padding: EdgeInsets.all(10),
                       padding: ProjectPadding.pageEmail,
                       decoration: _BoxEmailPassw(),
-                      child: _passwordTextField(),
+                      child: TextField(
+
+                          //keyboardType: TextInputType.password,
+                          keyboardType: TextInputType.text,
+                          obscureText: true,
+                          autofocus: true,
+                          autofillHints: const [AutofillHints.password],
+                          textInputAction: TextInputAction.next,
+                          decoration: _InputDecoration().passwodInput,
+                          onChanged: (val) {
+                            setState(() {
+                              password = val;
+                            });
+                          }),
+                      //_passwordTextField(),
                     ),
                     Row(
                       children: [
@@ -55,7 +93,36 @@ class _SpotifyState extends State<Spotify> {
                             style: const TextStyle(color: Colors.white)),
                       ],
                     ),
-                    _girisButton(),
+                    TextButton(
+                      onPressed: () async {
+                        var result = await servis.PostSpotify(SpotifyRequest(
+                            email: username,
+                            password: password,
+                            returnSecureToken: true));
+                        if (result is FirebaseAuthError) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(result.error.message)));
+                        }
+                        Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => conta()));
+                      },
+                      child: Container(
+                          height: 50,
+                          // margin: EdgeInsets.all(20),
+                          margin: EdgeInsets.all(10),
+                          // ignore: prefer_const_constructors
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(40),
+                            color: Colors.green,
+                            // Colors.orange,
+                          ),
+                          child: Center(
+                            child: Text(
+                              ProjectKeys().GirisYap,
+                              style: ProjectStyle.Giris,
+                            ),
+                          )),
+                    ),
                     TextButton(
                       onPressed: () {},
                       child: Text(ProjectKeys().Forgot,
@@ -65,10 +132,11 @@ class _SpotifyState extends State<Spotify> {
                 ),
               ),
             ),
+            const conta(),
 //2.SAYFA
-            Container(
+            /*Container(
               color: Colors.green,
-            ),
+            ),*/
           ])),
     );
   }
@@ -119,45 +187,6 @@ class _SpotifyState extends State<Spotify> {
   }
 }
 
-class _passwordTextField extends StatelessWidget {
-  const _passwordTextField({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      //keyboardType: TextInputType.password,
-      keyboardType: TextInputType.text,
-      obscureText: true,
-
-      autofocus: true,
-      autofillHints: const [AutofillHints.password],
-      textInputAction: TextInputAction.next,
-      decoration: _InputDecoration().passwodInput,
-    );
-  }
-}
-
-class _emailTextField extends StatelessWidget {
-  const _emailTextField({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      keyboardType: TextInputType.emailAddress,
-
-      autofocus: true,
-      autofillHints: const [AutofillHints.email],
-      textInputAction: TextInputAction.next,
-      decoration: _InputDecoration().emailInput,
-      //controller: _emailController,
-    );
-  }
-}
-
 class _InputDecoration {
   final emailInput = InputDecoration(
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(40.0)),
@@ -173,57 +202,6 @@ class _InputDecoration {
 
     filled: true,
   );
-}
-
-class _girisButton extends StatelessWidget {
-  const _girisButton({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: () {},
-      child: Container(
-          height: 50,
-          // margin: EdgeInsets.all(20),
-          margin: EdgeInsets.all(10),
-          // ignore: prefer_const_constructors
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(40),
-            color: Colors.green,
-            // Colors.orange,
-          ),
-          child: Center(
-            child: Text(
-              ProjectKeys().GirisYap,
-              style: ProjectStyle.Giris,
-            ),
-          )),
-    );
-  }
-}
-
-class ProjectKeys {
-  final String GirisYap = "SIGN IN ";
-  final String Stay = "stay signed in";
-  final String Forgot = "Forgot Password?";
-}
-
-class ProjectStyle {
-  static TextStyle Giris = const TextStyle(color: Colors.white);
-}
-
-class ProjectColor {
-  static Color backgroundColor = Color.fromARGB(255, 85, 84, 83);
-}
-
-class ImageItems {
-  final String spotify = "assets/spotify.png";
-}
-
-class ProjectPadding {
-  static const pageEmail = EdgeInsets.all(20);
 }
 
 enum _MyTabSpotifyViews { SIGNIN, SIGNUP }
